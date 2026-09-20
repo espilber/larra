@@ -58,11 +58,12 @@ pub struct Settings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActiveModel {
-    /// GGUF file name inside `<app-data>/models/`.
+    /// GGUF file name inside `<app-data>/models/`. Empty for an external
+    /// endpoint, where no file is managed locally.
     pub file: String,
     /// User-facing model name, e.g. "Gemma 4 12B".
     pub name: String,
-    /// Where it came from ("huggingface" | "ollama").
+    /// Where it came from ("huggingface" | "ollama" | "external").
     pub source: String,
     /// Repo or library reference, for Settings display.
     pub reference: String,
@@ -71,6 +72,108 @@ pub struct ActiveModel {
     /// Approximate download size in bytes.
     #[serde(alias = "size_bytes")]
     pub size_bytes: u64,
+    /// Set when Chat talks to an OpenAI-compatible server instead of the
+    /// bundled llama.cpp engine. `None` means the local GGUF variant.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub endpoint: Option<EndpointConfig>,
+}
+
+/// An external OpenAI-compatible model endpoint.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EndpointConfig {
+    /// Base URL, e.g. `http://127.0.0.1:1234/v1`. Normalized: no trailing
+    /// slash, no userinfo, loopback host only in this first version.
+    pub base_url: String,
+    /// The identifier sent in the `model` field of a request.
+    pub model_id: String,
+    /// Optional bearer token. `None` for servers that need no auth, which is
+    /// the common case on the same machine.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_key: Option<String>,
+}
+
+impl EndpointConfig {
+    /// Validate and normalize the values the user typed. Returns the
+    /// normalized `EndpointConfig` or a short reason for the Settings UI.
+    pub fn parse(
+        base_url: &str,
+        model_id: &str,
+        api_key: Option<&str>,
+    ) -> Result<Self, String> {
+        let base_url = base_url.trim();
+        if base_url.is_empty() {
+            return Err("endpointBaseUrlMissing".into());
+        }
+        if base_url.chars().count() > crate::limits::ENDPOINT_URL_MAX_CHARS {
+            return Err("endpointUrlTooLong".into());
+        }
+        let mut url = url::Url::parse(base_url)
+            .map_err(|_| "endpointUrlInvalid".to_string())?;
+        match url.scheme() {
+            "http" | "https" => {}
+            _ => return Err("endpointSchemeUnsupported".into()),
+        }
+        if !url.username().is_empty() || url.password().is_some() {
+            return Err("endpointUserInfoNotAllowed".into());
+        }
+        if !url.path_segments().map(|s| s.count() > 0).unwrap_or(false) {
+            url.set_path("/");
+        }
+        // Only the machine itself in v1; remote hosts would send Shelf
+        // documents across the network.
+        let host = url.host_str().unwrap_or("").trim_end_matches('.');
+        let loopback = matches!(
+            host,
+            "localhost" | "127.0.0.1" | "::1" | "[::1]"
+        );
+        if !loopback {
+            return Err("endpointHostNotLocal".into());
+        }
+        // Drop an empty fragment/query; keep a meaningful path such as /v1.
+        url.set_fragment(None);
+        if url.query().is_none() {
+            url.set_query(None);
+        }
+        let mut base_url = url.to_string();
+        if base_url.ends_with('/') {
+            base_url.pop();
+        }
+        if base_url.is_empty() {
+            return Err("endpointUrlInvalid".into());
+        }
+
+        let model_id = model_id.trim();
+        if model_id.is_empty() {
+            return Err("endpointModelIdMissing".into());
+        }
+        if model_id.chars().count() > crate::limits::ENDPOINT_MODEL_ID_MAX_CHARS {
+            return Err("endpointModelIdTooLong".into());
+        }
+
+        let api_key = api_key
+            .map(|key| key.trim().to_string())
+            .filter(|key| !key.is_empty());
+        if let Some(key) = &api_key {
+            if key.chars().count() > crate::limits::ENDPOINT_API_KEY_MAX_CHARS {
+                return Err("endpointApiKeyTooLong".into());
+            }
+        }
+
+        Ok(Self {
+            base_url,
+            model_id: model_id.to_string(),
+            api_key,
+        })
+    }
+}
+
+impl ActiveModel {
+    /// True when Chat talks to an external server instead of the local
+    /// llama-server process.
+    pub fn is_external(&self) -> bool {
+        self.endpoint.is_some()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -224,5 +327,175 @@ mod tests {
             loaded.house_rules.chars().count(),
             crate::limits::HOUSE_RULES_MAX_CHARS
         );
+    }
+
+    fn external_model() -> ActiveModel {
+        ActiveModel {
+            file: String::new(),
+            name: "Gemma 4 12B (LM Studio)".into(),
+            source: "external".into(),
+            reference: "LM Studio".into(),
+            license: None,
+            size_bytes: 0,
+            endpoint: Some(EndpointConfig {
+                base_url: "http://127.0.0.1:1234/v1".into(),
+                model_id: "gemma-4-12b".into(),
+                api_key: None,
+            }),
+        }
+    }
+
+    #[test]
+    fn external_model_roundtrips() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let settings = Settings {
+            active_model: Some(external_model()),
+            ..Default::default()
+        };
+        settings.save(&path).unwrap();
+        let loaded = Settings::load(&path);
+        let model = loaded.active_model.expect("active model");
+        assert!(model.is_external());
+        let endpoint = model.endpoint.unwrap();
+        assert_eq!(endpoint.base_url, "http://127.0.0.1:1234/v1");
+        assert_eq!(endpoint.model_id, "gemma-4-12b");
+        assert_eq!(endpoint.api_key, None);
+    }
+
+    #[test]
+    fn settings_without_endpoint_stay_compatible() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        // An older Rebost settings.json: no endpoint key at all.
+        std::fs::write(
+            &path,
+            serde_json::json!({
+                "onboardingDone": true,
+                "activeModel": {
+                    "file": "gemma.gguf",
+                    "name": "Gemma 4 12B",
+                    "source": "huggingface",
+                    "reference": "google/gemma-4-12b",
+                    "sizeBytes": 8_000_000_000u64
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let loaded = Settings::load(&path);
+        let model = loaded.active_model.expect("active model");
+        assert!(!model.is_external());
+        assert_eq!(model.file, "gemma.gguf");
+    }
+
+    #[test]
+    fn external_model_json_uses_camel_case() {
+        let json = serde_json::to_value(external_model()).unwrap();
+        let endpoint = json["endpoint"].as_object().unwrap();
+        assert_eq!(
+            endpoint["baseUrl"].as_str(),
+            Some("http://127.0.0.1:1234/v1")
+        );
+        assert_eq!(endpoint["modelId"].as_str(), Some("gemma-4-12b"));
+        assert!(!endpoint.get("apiKey").is_some());
+    }
+
+    #[test]
+    fn endpoint_parse_normalizes_url() {
+        let endpoint = EndpointConfig::parse("http://127.0.0.1:1234/v1/", "gemma-4-12b", None)
+            .expect("valid endpoint");
+        assert_eq!(endpoint.base_url, "http://127.0.0.1:1234/v1");
+        assert_eq!(endpoint.model_id, "gemma-4-12b");
+
+        // A bare host gets no path instead of a broken one.
+        let bare = EndpointConfig::parse("http://127.0.0.1:11434", "llama3", None)
+            .expect("bare host valid");
+        assert_eq!(bare.base_url, "http://127.0.0.1:11434");
+    }
+
+    #[test]
+    fn endpoint_parse_accepts_localhost_name() {
+        let endpoint = EndpointConfig::parse("http://localhost:1234/v1", "m", None)
+            .expect("localhost valid");
+        assert_eq!(endpoint.base_url, "http://localhost:1234/v1");
+    }
+
+    #[test]
+    fn endpoint_parse_keeps_key_and_trims() {
+        let endpoint = EndpointConfig::parse(
+            "  http://127.0.0.1:1234/v1  ",
+            "  gemma-4-12b  ",
+            Some("  sk-abc  "),
+        )
+        .expect("valid endpoint");
+        assert_eq!(endpoint.api_key.as_deref(), Some("sk-abc"));
+        assert_eq!(endpoint.base_url, "http://127.0.0.1:1234/v1");
+        assert_eq!(endpoint.model_id, "gemma-4-12b");
+    }
+
+    #[test]
+    fn endpoint_parse_rejects_remote_hosts() {
+        for host in ["http://192.168.1.10:1234", "https://example.com/v1"] {
+            let error = EndpointConfig::parse(host, "m", None).unwrap_err();
+            assert_eq!(error, "endpointHostNotLocal");
+        }
+    }
+
+    #[test]
+    fn endpoint_parse_rejects_bad_schemes_and_urls() {
+        assert_eq!(
+            EndpointConfig::parse("ftp://127.0.0.1", "m", None).unwrap_err(),
+            "endpointSchemeUnsupported"
+        );
+        assert_eq!(
+            EndpointConfig::parse("not a url", "m", None).unwrap_err(),
+            "endpointUrlInvalid"
+        );
+        assert_eq!(
+            EndpointConfig::parse("http://user:pass@127.0.0.1:1234", "m", None)
+                .unwrap_err(),
+            "endpointUserInfoNotAllowed"
+        );
+        assert_eq!(
+            EndpointConfig::parse("", "m", None).unwrap_err(),
+            "endpointBaseUrlMissing"
+        );
+    }
+
+    #[test]
+    fn endpoint_parse_rejects_missing_model_id() {
+        assert_eq!(
+            EndpointConfig::parse("http://127.0.0.1:1234", "   ", None).unwrap_err(),
+            "endpointModelIdMissing"
+        );
+    }
+
+    #[test]
+    fn endpoint_parse_rejects_long_values() {
+        let long = "x".repeat(crate::limits::ENDPOINT_URL_MAX_CHARS + 1);
+        assert_eq!(
+            EndpointConfig::parse(&long, "m", None).unwrap_err(),
+            "endpointUrlTooLong"
+        );
+        let long_model = "m".repeat(crate::limits::ENDPOINT_MODEL_ID_MAX_CHARS + 1);
+        assert_eq!(
+            EndpointConfig::parse("http://127.0.0.1:1234", &long_model, None)
+                .unwrap_err(),
+            "endpointModelIdTooLong"
+        );
+        let long_key = "k".repeat(crate::limits::ENDPOINT_API_KEY_MAX_CHARS + 1);
+        assert_eq!(
+            EndpointConfig::parse("http://127.0.0.1:1234", "m", Some(&long_key))
+                .unwrap_err(),
+            "endpointApiKeyTooLong"
+        );
+    }
+
+    #[test]
+    fn endpoint_parse_drops_empty_key() {
+        let endpoint = EndpointConfig::parse("http://127.0.0.1:1234", "m", Some("   "))
+            .expect("valid endpoint");
+        assert_eq!(endpoint.api_key, None);
     }
 }

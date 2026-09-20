@@ -134,6 +134,7 @@ impl Engine {
                 reference: reference.to_string(),
                 license,
                 size_bytes: resolved.size.unwrap_or(0),
+                endpoint: None,
             });
             settings.benchmark = None;
             settings.context_budget_chars = None;
