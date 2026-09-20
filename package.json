@@ -1,0 +1,70 @@
+{
+  "name": "larra",
+  "private": true,
+  "version": "0.9.3",
+  "license": "AGPL-3.0-or-later",
+  "description": "Private AI that works with your files.",
+  "author": {
+    "name": "espilber",
+    "url": "https://github.com/espilber"
+  },
+  "contributors": [
+    {
+      "name": "Rebost contributors (Frontierz)",
+      "url": "https://github.com/Frontierz-AI/Rebost"
+    }
+  ],
+  "homepage": "https://github.com/espilber/larra#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/espilber/larra.git"
+  },
+  "bugs": {
+    "url": "https://github.com/espilber/larra/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "format": "prettier --write \"src/**/*.{ts,svelte,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,svelte,css}\"",
+    "lint": "oxlint src",
+    "fetch-engine": "node scripts/fetch-engine.mjs",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@lucide/svelte": "^1.43.0",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-os": "^2.3.2",
+    "dompurify": "^3.4.15",
+    "marked": "^18.0.13",
+    "svelte-sonner": "^1.2.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2.11.4",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "jsdom": "^30.0.1",
+    "oxlint": "^1.82.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-svelte": "^4.1.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "svelte": "^5.57.0",
+    "svelte-check": "^4.7.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  }
+}

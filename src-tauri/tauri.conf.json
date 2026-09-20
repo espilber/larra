@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Larra",
+  "version": "0.9.3",
+  "identifier": "io.larra.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "node scripts/fetch-engine.mjs && node scripts/sign-engine-macos.mjs && pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Larra",
+        "width": 1320,
+        "height": 860,
+        "minWidth": 640,
+        "minHeight": 540,
+        "center": true,
+        "dragDropEnabled": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost blob: data:; connect-src ipc: http://ipc.localhost; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'",
+      "devCsp": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost blob: data:; connect-src ipc: http://ipc.localhost ws://127.0.0.1:1420 ws://127.0.0.1:1421 http://127.0.0.1:1420; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVDNTdENEVCQTQxQzY0NDgKUldSSVpCeWs2OVJYN0VWTXRCYnVVbmd0SWxvUjVFeWQ3bGFqVEdPYTJDZm00MEpoSTNyOHg4ZTkK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "copyright": "Copyright © 2026 Larra contributors",
+    "publisher": "espilber",
+    "shortDescription": "Private AI that works with your files.",
+    "category": "Productivity",
+    "resources": ["resources/tessdata/", "resources/engine/"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "files": {
+        "Resources/Assets.car": "icons/Assets.car"
+      },
+      "dmg": {
+        "background": "dmg/background.png",
+        "windowSize": {
+          "width": 660,
+          "height": 428
+        },
+        "windowPosition": {
+          "x": 200,
+          "y": 120
+        },
+        "appPosition": {
+          "x": 168,
+          "y": 178
+        },
+        "applicationFolderPosition": {
+          "x": 492,
+          "y": 178
+        }
+      }
+    }
+  }
+}

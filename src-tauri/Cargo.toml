@@ -1,0 +1,119 @@
+[package]
+name = "larra"
+version = "0.9.3"
+description = "Private AI that works with your files."
+authors = ["Larra contributors", "Rebost contributors (Frontierz)"]
+license = "AGPL-3.0-or-later"
+# About Larra and the in-app updater read this. Change it if the GitHub repo moves.
+repository = "https://github.com/espilber/larra"
+homepage = "https://github.com/espilber/larra"
+documentation = "https://github.com/espilber/larra#readme"
+readme = "../README.md"
+rust-version = "1.98"
+edition = "2021"
+
+[lib]
+name = "larra"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+# Desktop shell
+tauri = { version = "2.11.5", features = [] }
+tauri-plugin-dialog = "2.7.3"
+tauri-plugin-log = "2.9.0"
+tauri-plugin-opener = "2.5.4"
+tauri-plugin-os = "2.3.2"
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-window-state = "2.4.1"
+
+# Document understanding. Only the formats and analysis passes Larra uses are
+# enabled so the binary stays lean and fully offline. OCR is vendored
+# tesseract, statically linked, with English data bundled at build time.
+# Extra `*.traineddata` packs in `resources/tessdata/` are copied on first extract.
+xberg = { version = "1.0.14", default-features = false, features = [
+    "tokio-runtime",
+    "simd-utf8",
+    "pdf",
+    "excel",
+    "office",
+    "email",
+    "html",
+    "xml",
+    "language-detection",
+    "keywords",
+    "keywords-yake",
+    "summarization",
+    "ocr",
+    "bundle-tessdata-eng",
+] }
+
+# Local retrieval
+tantivy = "0.26.1"
+tantivy-stemmers = { version = "0.4.0", default-features = false, features = [
+    "armenian_mkrtchyan",
+    "basque",
+    "catalan",
+    "czech_dolamic_light",
+    "estonian_freienthal",
+    "hindi_lightweight",
+    "indonesian_tala",
+    "irish_gaelic",
+    "lithuanian_jocas",
+    "nepali",
+    "polish_yarovoy",
+    "yiddish_urieli",
+] }
+
+# Privacy
+pii-vault = "0.2.0"
+
+# Core plumbing
+notify = "8.2.0"
+tokio = { version = "1.53.1", features = ["full"] }
+reqwest = { version = "0.13.4", features = ["json", "stream", "gzip", "query", "charset", "http2"] }
+bytes = "1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+serde_yaml_ng = "0.10.0"
+sysinfo = "0.39.6"
+sha2 = "0.11.0"
+
+# Support
+regex = "1"
+anyhow = "1"
+log = "0.4"
+fs4 = "1.1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
+futures-util = "0.3"
+tar = "0.4"
+flate2 = "1"
+zip = { version = "8", default-features = false, features = ["deflate"] }
+dirs = "6"
+readabilityrs = "0.1.4"
+url = "2.5.8"
+rust-i18n = "4.2.1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"
+objc2-foundation = { version = "0.3.2", features = ["NSData", "NSDictionary"] }
+objc2-app-kit = { version = "0.3.2", features = [
+    "NSView",
+    "NSBitmapImageRep",
+    "NSImageRep",
+] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints.clippy]
+too_many_arguments = "allow"
+undocumented_unsafe_blocks = "warn"
+unused_result_ok = "warn"
+
+[profile.release]
+strip = true
+lto = "thin"

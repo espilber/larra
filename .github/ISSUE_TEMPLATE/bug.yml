@@ -1,0 +1,50 @@
+name: Bug
+description: Something in Larra is wrong
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Security issues go to SECURITY.md, not here.
+
+        This form is for something the app does wrong. Answer quality depends on
+        the installed AI, so that belongs in Discussions instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      placeholder: What did you expect, and what did you see instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "0.9.3 / git SHA / tauri dev"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and hardware
+      placeholder: "Mac 15, Apple chip, 24 GB / Windows 11, 32 GB"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Installed AI (if relevant)
+      placeholder: e.g. Gemma 4 12B
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Settings → Diagnostics. Redact document text.
+      render: text
+  - type: checkboxes
+    id: repro
+    attributes:
+      label: Checks
+      options:
+        - label: I reproduced this on the latest release, or on a current `main` build

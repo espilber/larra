@@ -1,0 +1,33 @@
+packages:
+  - "."
+allowBuilds:
+  esbuild: true
+# Changelog-reviewed; newer than pnpm's 24h age gate.
+minimumReleaseAgeExclude:
+  - "@lucide/svelte@1.38.0"
+  - dompurify@3.4.14
+  - vite@8.2.2
+  - marked@18.0.11
+  - oxlint@1.80.0
+  - "@oxlint/binding-android-arm-eabi@1.80.0"
+  - "@oxlint/binding-android-arm64@1.80.0"
+  - "@oxlint/binding-darwin-arm64@1.80.0"
+  - "@oxlint/binding-darwin-x64@1.80.0"
+  - "@oxlint/binding-freebsd-x64@1.80.0"
+  - "@oxlint/binding-linux-arm-gnueabihf@1.80.0"
+  - "@oxlint/binding-linux-arm-musleabihf@1.80.0"
+  - "@oxlint/binding-linux-arm64-gnu@1.80.0"
+  - "@oxlint/binding-linux-arm64-musl@1.80.0"
+  - "@oxlint/binding-linux-ppc64-gnu@1.80.0"
+  - "@oxlint/binding-linux-riscv64-gnu@1.80.0"
+  - "@oxlint/binding-linux-riscv64-musl@1.80.0"
+  - "@oxlint/binding-linux-s390x-gnu@1.80.0"
+  - "@oxlint/binding-linux-x64-gnu@1.80.0"
+  - "@oxlint/binding-linux-x64-musl@1.80.0"
+  - "@oxlint/binding-openharmony-arm64@1.80.0"
+  - "@oxlint/binding-win32-arm64-msvc@1.80.0"
+  - "@oxlint/binding-win32-ia32-msvc@1.80.0"
+  - "@oxlint/binding-win32-x64-msvc@1.80.0"
+  - "@tauri-apps/plugin-dialog@2.7.3"
+onlyBuiltDependencies:
+  - esbuild

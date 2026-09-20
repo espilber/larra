@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities for the main, About, and Update windows",
+    "windows": ["main", "about", "update"],
+    "permissions": [
+      "core:default",
+      "core:window:allow-start-dragging",
+      "core:window:allow-close",
+      "core:app:allow-version",
+      "core:menu:default",
+      "dialog:default",
+      "os:default",
+      "window-state:default",
+      "opener:allow-open-url",
+      "opener:allow-default-urls"
+    ]
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIconName</key>
+	<string>Icon</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Larra works with folders you add to a Shelf.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Larra works with folders you add to a Shelf.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Larra works with folders you add to a Shelf.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Larra works with folders you add to a Shelf.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>Larra works with folders you add to a Shelf.</string>
+</dict>
+</plist>

@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+*.png binary
+*.webp binary
+*.icns binary
+*.ico binary
+*.car binary
+*.traineddata binary
+*.pdf binary
+*.xlsx binary
+
+Cargo.lock merge=binary
+pnpm-lock.yaml merge=binary

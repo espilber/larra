@@ -1,0 +1,219 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/fetch-engine.mjs --dry-run
+      - run: pnpm check
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm audit --prod
+
+  rust_paths:
+    name: Rust paths
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            rust:
+              - "src-tauri/**"
+              - "rust-toolchain.toml"
+              - "locales/**"
+              - ".github/workflows/ci.yml"
+
+  rust:
+    name: Rust
+    needs: rust_paths
+    if: needs.rust_paths.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    env:
+      # Scratch on /mnt: the workspace disk fills compiling this crate (debug
+      # cdylib + static Tesseract). Do not add a large swapfile on that disk.
+      CARGO_TARGET_DIR: /mnt/larra-target
+      TMPDIR: /mnt/larra-tmp
+      TESSERACT_RS_CACHE_DIR: /mnt/xberg-tesseract-cache
+      CARGO_INCREMENTAL: "0"
+      CFLAGS: "-g0"
+      CXXFLAGS: "-g0"
+      # Full debug + static Tesseract + WebKitGTK is too big for rust-lld on
+      # a 7 GB runner (SIGBUS at link). Line tables keep test traces useful.
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+      # Cargo ignores target rustflags in config.toml when RUSTFLAGS is set
+      # (or when the config is not picked up). Set both flags here so CI never
+      # invokes rust-lld. `-fuse-ld=bfd` is passed last and wins.
+      RUSTFLAGS: "-C linker-features=-lld -C link-arg=-fuse-ld=bfd"
+    steps:
+      - name: Free disk and prepare /mnt scratch
+        run: |
+          set -euo pipefail
+          df -h
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL \
+            /usr/share/swift \
+            /usr/local/share/powershell
+          sudo mkdir -p /mnt/larra-target /mnt/larra-tmp /mnt/xberg-tesseract-cache
+          sudo chown -R "$(id -u):$(id -g)" /mnt/larra-target /mnt/larra-tmp /mnt/xberg-tesseract-cache
+          df -h
+          df -h /mnt
+      - uses: actions/checkout@v7
+      # Linux is not a supported product. Tauri still needs WebKitGTK headers
+      # to compile on Ubuntu. Tesseract needs a C++ toolchain and CMake.
+      - name: Install Ubuntu libraries
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libssl-dev \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-directories: /mnt/xberg-tesseract-cache
+      - name: Reset incomplete Tesseract sources
+        run: |
+          set -euo pipefail
+          cache="${TESSERACT_RS_CACHE_DIR}"
+          for lib in leptonica tesseract; do
+            if [[ -d "${cache}/third_party/${lib}" && ! -f "${cache}/third_party/${lib}/CMakeLists.txt" ]]; then
+              echo "Incomplete ${lib} source cache; removing ${cache}"
+              rm -rf "${cache}"
+              mkdir -p "${cache}"
+              break
+            fi
+          done
+          rm -rf src-tauri/target/xberg-tesseract-cache
+      - name: Verify llama.cpp pins still exist
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib, re, subprocess, sys
+          text = pathlib.Path("src-tauri/src/engine/pin.rs").read_text()
+          urls = sorted(set(re.findall(
+              r'url: "(https://github.com/ggml-org/llama.cpp/releases/download/[^"]+\.(?:tar\.gz|zip))"',
+              text,
+          )))
+          if not urls:
+              sys.exit("no engine pin URLs in pin.rs")
+          for url in urls:
+              result = subprocess.run(
+                  [
+                      "curl", "-sI", "-o", "/dev/null", "-w", "%{http_code}",
+                      "-L", "--retry", "5", "--retry-all-errors", "--max-time", "60",
+                      url,
+                  ],
+                  capture_output=True,
+                  text=True,
+              )
+              code = result.stdout.strip()
+              print(f"{code} {url}")
+              if result.returncode != 0 or code != "200":
+                  sys.exit(
+                      f"pin URL returned {code or result.returncode}: {url}\n{result.stderr}"
+                  )
+          PY
+      - run: cargo fmt --check
+        working-directory: src-tauri
+      # Linux is not a product. Skip the desktop cdylib/staticlib and
+      # integration tests; those stay on `just test` and the release build.
+      - name: Clippy (lib + unit tests, rlib)
+        working-directory: src-tauri
+        run: cargo clippy --lib --tests --config 'lib.crate-type=["rlib"]' -- -D warnings
+      - name: Test (lib, rlib)
+        working-directory: src-tauri
+        run: cargo test --lib --config 'lib.crate-type=["rlib"]'
+
+  desktop_quality:
+    name: Desktop quality (${{ matrix.os }})
+    needs: rust_paths
+    if: needs.rust_paths.outputs.rust == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-directories: src-tauri/target/xberg-tesseract-cache
+      - name: Reset incomplete Tesseract sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache="src-tauri/target/xberg-tesseract-cache"
+          for lib in leptonica tesseract; do
+            if [[ -d "${cache}/third_party/${lib}" && ! -f "${cache}/third_party/${lib}/CMakeLists.txt" ]]; then
+              echo "Incomplete ${lib} source cache; removing ${cache}"
+              rm -rf "${cache}"
+              break
+            fi
+          done
+      - name: Unit and integration quality checks
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - run: cargo deny check
+        working-directory: src-tauri

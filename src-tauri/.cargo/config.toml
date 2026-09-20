@@ -1,0 +1,13 @@
+# rustc 1.90+ uses rust-lld on x86_64 Linux. Linking this crate as a debug
+# cdylib (Tauri + static Tesseract) crashed lld with SIGBUS on GitHub's 7 GB
+# runners. GNU ld is slower and does not crash.
+#
+# `-Clinker-features=-lld` is the official opt-out. rustc can still inject
+# `-fuse-ld=lld`; the user's `-fuse-ld=bfd` is passed last and wins.
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-Clinker-features=-lld", "-Clink-arg=-fuse-ld=bfd"]
+
+# MSVC link.exe can refuse a large ARM64 image with LNK1322 (an old Cortex-A53
+# erratum). Snapdragon PCs are not that chip. Skip the check so the installer links.
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=/arm64hazardfree"]

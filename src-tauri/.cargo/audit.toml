@@ -1,0 +1,6 @@
+# Keep in sync with deny.toml [advisories] ignore.
+[advisories]
+ignore = [
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
+]

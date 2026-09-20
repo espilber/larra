@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+
+# Frontend build
+dist/
+dist-ssr/
+
+# Rust / Tauri build (src-tauri/target is tens of GB — never commit)
+src-tauri/target/
+target/
+
+# Generated Tauri schemas
+src-tauri/gen/schemas/
+
+# Svelte / Vite
+.svelte-check/
+.svelte-kit/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+pnpm-debug.log*
+npm-debug.log*
+
+# Env and secrets (updater signing keys especially)
+.env
+.env.*
+!.env.example
+.env.signing
+*.pem
+*.key
+*.p8
+*.p12
+
+# Local overrides
+*.local
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Internal product spec
+REBOST-DEFINITION-v2.md
+
+# Maintainer-only (not OSS)
+.cursor/
+.ai/
+.agents/
+MODEL-RECOMMENDATIONS.md
+
+# Screenshot set used to build the site and the docs images. The README uses
+# docs/assets/*.webp instead, so these stay on the maintainer's machine.
+screenshots/
+
+# Throwaway DMG layout preview (regenerate with `just dmg-preview`)
+src-tauri/dmg/preview.png
+src-tauri/dmg/preview-Rebost.dmg
+src-tauri/dmg/rw.preview.dmg
+
+# Pinned llama.cpp archives (fetched at build; not source)
+src-tauri/resources/engine-cache/
+src-tauri/resources/engine/*.tar.gz
+src-tauri/resources/engine/*.zip
+src-tauri/resources/engine/*.part
+
+# Local real-model quality measurements
+quality-results.json

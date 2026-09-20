@@ -1,0 +1,35 @@
+name: Feature
+description: A change you would like in Larra
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      placeholder: What is hard or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      placeholder: What should Larra do instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Chat
+        - Shelves / ingest
+        - Recipes
+        - House rules
+        - Retrieval
+        - AI / Settings
+        - Privacy
+        - Docs / DX
+        - Other
+    validations:
+      required: true
