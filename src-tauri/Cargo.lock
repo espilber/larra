@@ -3614,7 +3614,7 @@ dependencies = [
 
 [[package]]
 name = "larra"
-version = "0.9.3"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "bytes",
