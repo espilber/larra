@@ -8,6 +8,7 @@ mod binary;
 mod budget;
 pub mod catalog;
 pub mod download;
+pub mod endpoint;
 mod gguf;
 mod gpu;
 mod install;

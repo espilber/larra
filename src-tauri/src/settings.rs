@@ -96,11 +96,38 @@ pub struct EndpointConfig {
 impl EndpointConfig {
     /// Validate and normalize the values the user typed. Returns the
     /// normalized `EndpointConfig` or a short reason for the Settings UI.
-    pub fn parse(
+    pub fn parse(base_url: &str, model_id: &str, api_key: Option<&str>) -> Result<Self, String> {
+        let base_url = Self::normalize_base_url(base_url)?;
+
+        let model_id = model_id.trim();
+        if model_id.is_empty() {
+            return Err("endpointModelIdMissing".into());
+        }
+        if model_id.chars().count() > crate::limits::ENDPOINT_MODEL_ID_MAX_CHARS {
+            return Err("endpointModelIdTooLong".into());
+        }
+
+        let api_key = Self::normalize_api_key(api_key)?;
+
+        Ok(Self {
+            base_url,
+            model_id: model_id.to_string(),
+            api_key,
+        })
+    }
+
+    /// Validate and normalize just the base URL and the key, for probing an
+    /// endpoint before a model has been picked.
+    pub fn parse_url(
         base_url: &str,
-        model_id: &str,
         api_key: Option<&str>,
-    ) -> Result<Self, String> {
+    ) -> Result<(String, Option<String>), String> {
+        let base_url = Self::normalize_base_url(base_url)?;
+        let api_key = Self::normalize_api_key(api_key)?;
+        Ok((base_url, api_key))
+    }
+
+    fn normalize_base_url(base_url: &str) -> Result<String, String> {
         let base_url = base_url.trim();
         if base_url.is_empty() {
             return Err("endpointBaseUrlMissing".into());
@@ -108,8 +135,7 @@ impl EndpointConfig {
         if base_url.chars().count() > crate::limits::ENDPOINT_URL_MAX_CHARS {
             return Err("endpointUrlTooLong".into());
         }
-        let mut url = url::Url::parse(base_url)
-            .map_err(|_| "endpointUrlInvalid".to_string())?;
+        let mut url = url::Url::parse(base_url).map_err(|_| "endpointUrlInvalid".to_string())?;
         match url.scheme() {
             "http" | "https" => {}
             _ => return Err("endpointSchemeUnsupported".into()),
@@ -120,17 +146,10 @@ impl EndpointConfig {
         if !url.path_segments().map(|s| s.count() > 0).unwrap_or(false) {
             url.set_path("/");
         }
-        // Only the machine itself in v1; remote hosts would send Shelf
-        // documents across the network.
-        let host = url.host_str().unwrap_or("").trim_end_matches('.');
-        let loopback = matches!(
-            host,
-            "localhost" | "127.0.0.1" | "::1" | "[::1]"
-        );
-        if !loopback {
-            return Err("endpointHostNotLocal".into());
-        }
-        // Drop an empty fragment/query; keep a meaningful path such as /v1.
+        // Documents on a Shelf are sent to this host. Loopback means the
+        // chat never leaves the machine; anything else (a home server, a
+        // NAS, a rented box) is a real choice the user makes, and the
+        // Settings UI shows a warning for it.
         url.set_fragment(None);
         if url.query().is_none() {
             url.set_query(None);
@@ -142,15 +161,10 @@ impl EndpointConfig {
         if base_url.is_empty() {
             return Err("endpointUrlInvalid".into());
         }
+        Ok(base_url)
+    }
 
-        let model_id = model_id.trim();
-        if model_id.is_empty() {
-            return Err("endpointModelIdMissing".into());
-        }
-        if model_id.chars().count() > crate::limits::ENDPOINT_MODEL_ID_MAX_CHARS {
-            return Err("endpointModelIdTooLong".into());
-        }
-
+    fn normalize_api_key(api_key: Option<&str>) -> Result<Option<String>, String> {
         let api_key = api_key
             .map(|key| key.trim().to_string())
             .filter(|key| !key.is_empty());
@@ -159,12 +173,20 @@ impl EndpointConfig {
                 return Err("endpointApiKeyTooLong".into());
             }
         }
+        Ok(api_key)
+    }
+}
 
-        Ok(Self {
-            base_url,
-            model_id: model_id.to_string(),
-            api_key,
-        })
+impl EndpointConfig {
+    /// True when the base URL points at this machine, so chat answers and
+    /// Shelf documents never touch the network.
+    pub fn is_loopback(&self) -> bool {
+        let url = url::Url::parse(&self.base_url)
+            .unwrap_or_else(|_| url::Url::parse("http://invalid.invalid").expect("static url"));
+        matches!(
+            url.host_str().unwrap_or("").trim_end_matches('.'),
+            "localhost" | "127.0.0.1" | "::1" | "[::1]"
+        )
     }
 }
 
@@ -416,8 +438,8 @@ mod tests {
 
     #[test]
     fn endpoint_parse_accepts_localhost_name() {
-        let endpoint = EndpointConfig::parse("http://localhost:1234/v1", "m", None)
-            .expect("localhost valid");
+        let endpoint =
+            EndpointConfig::parse("http://localhost:1234/v1", "m", None).expect("localhost valid");
         assert_eq!(endpoint.base_url, "http://localhost:1234/v1");
     }
 
@@ -435,10 +457,26 @@ mod tests {
     }
 
     #[test]
-    fn endpoint_parse_rejects_remote_hosts() {
-        for host in ["http://192.168.1.10:1234", "https://example.com/v1"] {
-            let error = EndpointConfig::parse(host, "m", None).unwrap_err();
-            assert_eq!(error, "endpointHostNotLocal");
+    fn endpoint_parse_accepts_lan_hosts_for_a_second_machine() {
+        // The model may live on another machine in the home network; the
+        // Settings UI warns instead of refusing.
+        let lan =
+            EndpointConfig::parse("http://192.168.1.10:1234", "m", None).expect("lan host valid");
+        assert!(!lan.is_loopback());
+        let hostname =
+            EndpointConfig::parse("http://gpu-box.local:1234", "m", None).expect("mdns host valid");
+        assert!(!hostname.is_loopback());
+        let public =
+            EndpointConfig::parse("https://example.com/v1", "m", None).expect("https host valid");
+        assert!(!public.is_loopback());
+    }
+
+    #[test]
+    fn endpoint_parse_flags_loopback() {
+        for host in ["http://127.0.0.1:1234/v1", "http://localhost:11434"] {
+            assert!(EndpointConfig::parse(host, "m", None)
+                .expect("loopback valid")
+                .is_loopback());
         }
     }
 
@@ -453,8 +491,7 @@ mod tests {
             "endpointUrlInvalid"
         );
         assert_eq!(
-            EndpointConfig::parse("http://user:pass@127.0.0.1:1234", "m", None)
-                .unwrap_err(),
+            EndpointConfig::parse("http://user:pass@127.0.0.1:1234", "m", None).unwrap_err(),
             "endpointUserInfoNotAllowed"
         );
         assert_eq!(
@@ -480,14 +517,12 @@ mod tests {
         );
         let long_model = "m".repeat(crate::limits::ENDPOINT_MODEL_ID_MAX_CHARS + 1);
         assert_eq!(
-            EndpointConfig::parse("http://127.0.0.1:1234", &long_model, None)
-                .unwrap_err(),
+            EndpointConfig::parse("http://127.0.0.1:1234", &long_model, None).unwrap_err(),
             "endpointModelIdTooLong"
         );
         let long_key = "k".repeat(crate::limits::ENDPOINT_API_KEY_MAX_CHARS + 1);
         assert_eq!(
-            EndpointConfig::parse("http://127.0.0.1:1234", "m", Some(&long_key))
-                .unwrap_err(),
+            EndpointConfig::parse("http://127.0.0.1:1234", "m", Some(&long_key)).unwrap_err(),
             "endpointApiKeyTooLong"
         );
     }

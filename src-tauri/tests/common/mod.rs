@@ -44,11 +44,7 @@ pub fn make_shelf(app: &TestApp, name: &str) -> String {
 }
 
 /// Run the full pipeline synchronously for one file.
-pub async fn ingest_file(
-    app: &TestApp,
-    shelf_id: &str,
-    path: &Path,
-) -> larra::types::DocumentMeta {
+pub async fn ingest_file(app: &TestApp, shelf_id: &str, path: &Path) -> larra::types::DocumentMeta {
     let shelf = app
         .ctx
         .library

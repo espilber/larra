@@ -61,6 +61,21 @@ pub async fn models_search(
         })
 }
 
+/// Ask an external OpenAI-compatible endpoint which models it serves, for
+/// the Settings picker. Sends no documents — only the probe request.
+#[tauri::command]
+pub async fn external_endpoint_probe(
+    engine: State<'_, Arc<Engine>>,
+    base_url: String,
+    api_key: Option<String>,
+) -> CmdResult<Vec<crate::engine::endpoint::EndpointModel>> {
+    let (base_url, api_key) =
+        crate::settings::EndpointConfig::parse_url(&base_url, api_key.as_deref())?;
+    crate::engine::endpoint::probe_models(&engine.client, &base_url, api_key.as_deref())
+        .await
+        .map_err(|error| format!("{error:#}"))
+}
+
 /// Open the public Hugging Face or Ollama page for a catalog AI.
 #[tauri::command]
 pub fn open_model_page(app: AppHandle, source: String, reference: String) -> CmdResult<()> {
