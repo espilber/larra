@@ -289,6 +289,12 @@ pub(crate) fn apply_endpoint_body_fields(
 
 pub(crate) const CHAT_STALL_TIMEOUT: Duration = Duration::from_secs(90);
 
+/// External endpoints get a much wider window: the remote machine may need
+/// minutes to chew through a big Shelf prompt before the first token, and
+/// tool-call rounds put another long quiet stretch between chunks. A server
+/// that is truly gone fails earlier at the HTTP layer.
+pub(crate) const ENDPOINT_CHAT_STALL_TIMEOUT: Duration = Duration::from_secs(300);
+
 /// Read an OpenAI-style SSE chat stream until `[DONE]`, cancel, or error.
 #[cfg(test)]
 pub(crate) async fn consume_sse<S, E>(

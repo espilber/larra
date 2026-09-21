@@ -331,7 +331,7 @@ impl Engine {
                 inner.flatten_tools = false;
                 inner.tools_rejected = false;
                 inner.benchmark_runtime = None;
-                inner.chat_stall = super::stream::CHAT_STALL_TIMEOUT;
+                inner.chat_stall = super::stream::ENDPOINT_CHAT_STALL_TIMEOUT;
                 *crate::core::write_lock(&self.ctx.runtime_plan) = None;
                 let url = endpoint.base_url.clone();
                 inner.reasoning = Some(self.load_reasoning_caps(&url).await);
