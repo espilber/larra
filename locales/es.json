@@ -113,7 +113,22 @@
     "measureAgain": "Volver a medir la velocidad",
     "measuring": "Midiendo…",
     "measureDone": "Medición de velocidad actualizada.",
-    "measureFailed": "No se ha podido medir la velocidad. Inténtalo cuando Chat esté inactivo."
+    "measureFailed": "No se ha podido medir la velocidad. Inténtalo cuando Chat esté inactivo.",
+    "externalEndpoint": "Servidor de modelos en tu red",
+    "externalEndpointLede": "Apunta la app a un servidor compatible con OpenAI en tu red: URL, API key y un desplegable con los modelos que detecta.",
+    "externalUrl": "Dirección del servidor",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalApiKey": "API key (opcional)",
+    "externalDetect": "Buscar modelos",
+    "externalDetecting": "Buscando modelos…",
+    "externalPick": "Modelo del servidor",
+    "externalUseModel": "Usar este modelo",
+    "externalInUse": "Este modelo es ahora la IA activa.",
+    "externalStopUsing": "Dejar de usarlo",
+    "externalSource": "Servidor externo",
+    "externalRemoteNote": "las respuestas llegan desde otra máquina",
+    "externalRemoteWarn": "Los documentos del estante se enviarán a este servidor.",
+    "externalNoModels": "El servidor no reporta ningún modelo."
   },
   "onboarding": {
     "welcome": "Te damos la bienvenida a Larra",
@@ -544,7 +559,15 @@
     "engineLogMissing": "Todavía no hay registro en este ordenador.",
     "folderNotFound": "No se ha encontrado la carpeta.",
     "promptTooLong": "Esta pregunta y las House rules son demasiado largas para que esta IA las lea de una vez. Acórtalas o elige una IA que admita más texto.",
-    "attachmentsFailed": "No se han podido leer algunos archivos adjuntos. Vuelve a procesarlos antes de preguntar sobre ellos."
+    "attachmentsFailed": "No se han podido leer algunos archivos adjuntos. Vuelve a procesarlos antes de preguntar sobre ellos.",
+    "endpointBaseUrlMissing": "Escribe primero la dirección del servidor.",
+    "endpointUrlTooLong": "Esa dirección es demasiado larga.",
+    "endpointUrlInvalid": "Eso no parece una dirección de servidor.",
+    "endpointSchemeUnsupported": "Solo se admiten direcciones http y https.",
+    "endpointUserInfoNotAllowed": "Usa el campo de API key, no usuario:contraseña en la dirección.",
+    "endpointModelIdMissing": "Elige primero un modelo.",
+    "endpointModelIdTooLong": "Ese identificador de modelo es demasiado largo.",
+    "endpointApiKeyTooLong": "Esa API key es demasiado larga."
   },
   "pii": {
     "heading": "Información personal",

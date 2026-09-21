@@ -114,7 +114,22 @@
     "measureAgain": "Mät hastigheten igen",
     "measuring": "Mäter…",
     "measureDone": "Hastighetsmätningen har uppdaterats.",
-    "measureFailed": "Det gick inte att mäta hastigheten. Försök igen när Chat är inaktivt."
+    "measureFailed": "Det gick inte att mäta hastigheten. Försök igen när Chat är inaktivt.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Välkommen till Larra",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Loggen finns inte på den här datorn ännu.",
     "folderNotFound": "Mappen hittades inte.",
     "promptTooLong": "Frågan och House rules är för långa för att den här AI:n ska kunna läsa dem på en gång. Korta ned dem eller välj en AI som kan läsa mer text.",
-    "attachmentsFailed": "Vissa bilagor kunde inte läsas. Bearbeta dem igen innan du ställer frågor om dem."
+    "attachmentsFailed": "Vissa bilagor kunde inte läsas. Bearbeta dem igen innan du ställer frågor om dem.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Personuppgifter",

@@ -114,7 +114,22 @@
     "measureAgain": "Νέα μέτρηση ταχύτητας",
     "measuring": "Γίνεται μέτρηση…",
     "measureDone": "Η μέτρηση ταχύτητας ενημερώθηκε.",
-    "measureFailed": "Δεν ήταν δυνατή η μέτρηση ταχύτητας. Δοκιμάστε ξανά όταν το Chat είναι ανενεργό."
+    "measureFailed": "Δεν ήταν δυνατή η μέτρηση ταχύτητας. Δοκιμάστε ξανά όταν το Chat είναι ανενεργό.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Καλώς ήρθες στο Larra",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Δεν υπάρχει ακόμα αρχείο καταγραφής σε αυτόν τον υπολογιστή.",
     "folderNotFound": "Ο φάκελος δεν βρέθηκε.",
     "promptTooLong": "Η ερώτηση και τα House rules είναι πολύ μεγάλα για να τα διαβάσει αυτό το AI με τη μία. Συντόμευσέ τα ή επίλεξε ένα AI που μπορεί να διαβάσει περισσότερο κείμενο.",
-    "attachmentsFailed": "Δεν ήταν δυνατή η ανάγνωση ορισμένων συνημμένων. Δοκίμασε να τα επεξεργαστεί ξανά το Larra πριν κάνεις ερωτήσεις γι’ αυτά."
+    "attachmentsFailed": "Δεν ήταν δυνατή η ανάγνωση ορισμένων συνημμένων. Δοκίμασε να τα επεξεργαστεί ξανά το Larra πριν κάνεις ερωτήσεις γι’ αυτά.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Προσωπικές πληροφορίες",

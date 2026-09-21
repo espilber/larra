@@ -177,6 +177,17 @@ export interface ActiveModel {
   reference: string;
   license?: string;
   sizeBytes: number;
+  endpoint?: EndpointConfig | null;
+}
+
+export interface EndpointConfig {
+  baseUrl: string;
+  modelId: string;
+  apiKey?: string;
+}
+
+export interface EndpointModel {
+  id: string;
 }
 
 export interface ModelSearchResult {
@@ -520,6 +531,11 @@ export const api = {
   engineRemeasure: () => invoke<void>("engine_remeasure"),
   machineProfile: () => invoke<MachineView>("machine_profile"),
   modelsSearch: (query: string) => invoke<ModelSearchResult[]>("models_search", { query }),
+  externalEndpointProbe: (baseUrl: string, apiKey?: string) =>
+    invoke<EndpointModel[]>("external_endpoint_probe", { baseUrl, apiKey }),
+  externalModelSet: (baseUrl: string, modelId: string, apiKey?: string, displayName?: string) =>
+    invoke<void>("external_model_set", { baseUrl, modelId, apiKey, displayName }),
+  externalModelClear: () => invoke<void>("external_model_clear"),
   modelInstall: (source: string, reference: string, name: string, license?: string) =>
     invoke<void>("model_install", { source, reference, name, license }),
   openModelPage: (source: string, reference: string) =>

@@ -114,7 +114,22 @@
     "measureAgain": "速度を再測定",
     "measuring": "測定中…",
     "measureDone": "速度の測定結果を更新しました。",
-    "measureFailed": "速度を測定できませんでした。Chatが応答していないときに再試行してください。"
+    "measureFailed": "速度を測定できませんでした。Chatが応答していないときに再試行してください。",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Larraへようこそ",
@@ -545,7 +560,15 @@
     "engineLogMissing": "このコンピュータには、まだエンジンのログがありません。",
     "folderNotFound": "フォルダが見つかりません。",
     "promptTooLong": "質問とHouse rulesが長すぎて、このAIでは一度に読み取れません。短くするか、より多くの文章を読み取れるAIを選んでください。",
-    "attachmentsFailed": "一部の添付ファイルを読み取れませんでした。質問する前に、ファイルを再処理してください。"
+    "attachmentsFailed": "一部の添付ファイルを読み取れませんでした。質問する前に、ファイルを再処理してください。",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "個人情報",

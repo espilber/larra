@@ -114,7 +114,22 @@
     "measureAgain": "Znovu změřit rychlost",
     "measuring": "Probíhá měření…",
     "measureDone": "Měření rychlosti bylo aktualizováno.",
-    "measureFailed": "Rychlost se nepodařilo změřit. Zkuste to znovu, až Chat nebude pracovat."
+    "measureFailed": "Rychlost se nepodařilo změřit. Zkuste to znovu, až Chat nebude pracovat.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Vítej v Larrau",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Na tomto počítači zatím žádný protokol není.",
     "folderNotFound": "Složka se nenašla.",
     "promptTooLong": "Otázka a House rules jsou příliš dlouhé na to, aby je tato AI přečetla najednou. Zkrať je nebo vyber AI, která zvládne více textu.",
-    "attachmentsFailed": "Některé přílohy se nepodařilo přečíst. Než se na ně zeptáš, nech je znovu zpracovat."
+    "attachmentsFailed": "Některé přílohy se nepodařilo přečíst. Než se na ně zeptáš, nech je znovu zpracovat.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Osobní údaje",

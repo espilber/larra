@@ -114,7 +114,22 @@
     "measureAgain": "Mål hastigheten på nytt",
     "measuring": "Måler…",
     "measureDone": "Hastighetsmålingen er oppdatert.",
-    "measureFailed": "Kunne ikke måle hastigheten. Prøv igjen når Chat er inaktiv."
+    "measureFailed": "Kunne ikke måle hastigheten. Prøv igjen når Chat er inaktiv.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Velkommen til Larra",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Det finnes ingen logg på denne datamaskinen ennå.",
     "folderNotFound": "Finner ikke mappen.",
     "promptTooLong": "Spørsmålet og House rules er for lange til at denne KI-en kan lese alt på én gang. Forkort dem eller velg en KI som kan lese mer tekst.",
-    "attachmentsFailed": "Noen vedlegg kunne ikke leses. Behandle dem på nytt før du spør om dem."
+    "attachmentsFailed": "Noen vedlegg kunne ikke leses. Behandle dem på nytt før du spør om dem.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Personopplysninger",

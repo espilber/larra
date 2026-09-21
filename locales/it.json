@@ -114,7 +114,22 @@
     "measureAgain": "Misura di nuovo la velocità",
     "measuring": "Misurazione…",
     "measureDone": "Misurazione della velocità aggiornata.",
-    "measureFailed": "Impossibile misurare la velocità. Riprova quando Chat è inattivo."
+    "measureFailed": "Impossibile misurare la velocità. Riprova quando Chat è inattivo.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Ti diamo il benvenuto in Larra",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Il registro non è ancora su questo computer.",
     "folderNotFound": "Cartella non trovata.",
     "promptTooLong": "La domanda e le House rules sono troppo lunghe perché questa IA le legga tutte insieme. Accorciale o scegli un'IA in grado di leggere più testo.",
-    "attachmentsFailed": "Non è stato possibile leggere alcuni allegati. Elaborali di nuovo prima di fare domande su di essi."
+    "attachmentsFailed": "Non è stato possibile leggere alcuni allegati. Elaborali di nuovo prima di fare domande su di essi.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Informazioni personali",

@@ -30,7 +30,7 @@
     t,
     type LocalePref,
   } from "$lib/i18n.svelte";
-  import { Cpu, Search, BadgeCheck, Stethoscope, Save } from "@lucide/svelte";
+  import { Cpu, Search, BadgeCheck, Stethoscope, Save, Server, ChevronDown } from "@lucide/svelte";
   import DownloadProgress from "$lib/components/DownloadProgress.svelte";
   import ResetWorkspaceModal from "$lib/components/ResetWorkspaceModal.svelte";
   import ExploreModelsModal from "$lib/components/ExploreModelsModal.svelte";
@@ -58,6 +58,97 @@
   const chatBusy = $derived(
     Object.keys(chatState.pending).length > 0 || Object.keys(chatState.outbound).length > 0,
   );
+
+  // --- External model endpoint (URL + key + detected models) ---
+  const ENDPOINT_ERROR_KEYS = [
+    "endpointBaseUrlMissing",
+    "endpointUrlTooLong",
+    "endpointUrlInvalid",
+    "endpointSchemeUnsupported",
+    "endpointUserInfoNotAllowed",
+    "endpointModelIdMissing",
+    "endpointModelIdTooLong",
+    "endpointApiKeyTooLong",
+  ] as const;
+
+  function endpointError(error: unknown): string {
+    const raw = typeof error === "string" ? error : String(error);
+    const key = raw.trim();
+    if (ENDPOINT_ERROR_KEYS.includes(key as (typeof ENDPOINT_ERROR_KEYS)[number])) {
+      return t(`errors.${key}`);
+    }
+    return userFacingError(error);
+  }
+
+  let endpointOpen = $state(
+    app.settings?.activeModel?.endpoint !== undefined && app.settings?.activeModel?.source === "external",
+  );
+  let endpointUrl = $state("");
+  let endpointKey = $state("");
+  let endpointBusy = $state(false);
+  let endpointModels = $state<Array<{ id: string }>>([]);
+  let endpointPicked = $state("");
+  let endpointNote = $state("");
+
+  const endpointLoopback = $derived(
+    /^(http|https):\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(endpointUrl.trim().toLowerCase()),
+  );
+
+  async function probeEndpoint() {
+    if (endpointBusy) return;
+    endpointBusy = true;
+    endpointNote = "";
+    endpointModels = [];
+    endpointPicked = "";
+    try {
+      const models = await api.externalEndpointProbe(
+        endpointUrl.trim(),
+        endpointKey.trim() || undefined,
+      );
+      endpointModels = models;
+      if (models.length === 0) {
+        endpointNote = t("settings.externalNoModels");
+      } else if (models.length === 1 && models[0]) {
+        endpointPicked = models[0].id;
+      }
+    } catch (error) {
+      endpointNote = endpointError(error);
+    } finally {
+      endpointBusy = false;
+    }
+  }
+
+  async function useEndpointModel() {
+    if (endpointBusy || !endpointPicked) return;
+    endpointBusy = true;
+    endpointNote = "";
+    try {
+      await api.externalModelSet(
+        endpointUrl.trim(),
+        endpointPicked,
+        endpointKey.trim() || undefined,
+      );
+      await refreshSettings();
+      endpointNote = t("settings.externalInUse");
+    } catch (error) {
+      endpointNote = endpointError(error);
+    } finally {
+      endpointBusy = false;
+    }
+  }
+
+  async function stopUsingEndpoint() {
+    endpointBusy = true;
+    try {
+      await api.externalModelClear();
+      await refreshSettings();
+      endpointNote = "";
+    } catch (error) {
+      endpointNote = endpointError(error);
+    } finally {
+      endpointBusy = false;
+    }
+  }
 
   async function measureAgain() {
     if (measuring) return;
@@ -400,10 +491,19 @@
           <BadgeCheck size={18} class="shrink-0 text-navy-600 dark:text-navy-400" />
           <div class="min-w-0 flex-1">
             <p class="text-[13.5px] font-semibold text-ink">{model.name}</p>
-            <p class="text-[11.5px] text-ink-soft">
-              {formatBytes(model.sizeBytes)}{model.license ? ` · ${model.license}` : ""} ·
-              {t("settings.installedHere")}
-            </p>
+            {#if model.endpoint}
+              <p class="text-[11.5px] text-ink-soft">
+                {t("settings.externalSource")} · {model.endpoint.baseUrl}
+                {#if !/^(http|https):\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(model.endpoint.baseUrl.toLowerCase())}
+                  · {t("settings.externalRemoteNote")}
+                {/if}
+              </p>
+            {:else}
+              <p class="text-[11.5px] text-ink-soft">
+                {formatBytes(model.sizeBytes)}{model.license ? ` · ${model.license}` : ""} ·
+                {t("settings.installedHere")}
+              </p>
+            {/if}
           </div>
           <span
             class="rounded-full px-2 py-1 text-[10.5px] font-semibold
@@ -415,8 +515,100 @@
           >
             {engineStatusLabel}
           </span>
+          {#if model.endpoint}
+            <button
+              type="button"
+              class="btn-outline shrink-0"
+              onclick={stopUsingEndpoint}
+              disabled={endpointBusy}
+            >
+              {t("settings.externalStopUsing")}
+            </button>
+          {/if}
         </div>
       {/if}
+
+      <div class="mt-5 border-t border-navy-950/10 pt-5 dark:border-white/10">
+        <button
+          type="button"
+          class="flex w-full flex-wrap items-center gap-3 text-left"
+          aria-expanded={endpointOpen}
+          onclick={() => (endpointOpen = !endpointOpen)}
+        >
+          <Server size={16} class="shrink-0 text-navy-600 dark:text-navy-400" />
+          <span class="min-w-0 flex-1">
+            <span class="block text-[15px] font-semibold text-ink">
+              {t("settings.externalEndpoint")}
+            </span>
+            <span class="mt-0.5 block text-[12.5px] leading-snug text-ink-soft">
+              {t("settings.externalEndpointLede")}
+            </span>
+          </span>
+          <ChevronDown
+            size={15}
+            class="shrink-0 transition-transform {endpointOpen ? 'rotate-180' : ''}"
+          />
+        </button>
+        {#if endpointOpen}
+          <div class="mt-4 rounded-xl border border-paper-line bg-paper-soft/50 px-4 py-3">
+            <label class="block text-[12px] font-medium text-ink" for="endpoint-url">
+              {t("settings.externalUrl")}
+            </label>
+            <input
+              id="endpoint-url"
+              type="text"
+              class="mt-1 w-full rounded-lg border border-paper-line bg-paper px-3 py-2 text-[13px] text-ink"
+              placeholder={t("settings.externalUrlPlaceholder")}
+              bind:value={endpointUrl}
+            />
+            <label class="mt-3 block text-[12px] font-medium text-ink" for="endpoint-key">
+              {t("settings.externalApiKey")}
+            </label>
+            <input
+              id="endpoint-key"
+              type="password"
+              class="mt-1 w-full rounded-lg border border-paper-line bg-paper px-3 py-2 text-[13px] text-ink"
+              placeholder="—"
+              bind:value={endpointKey}
+            />
+            {#if endpointUrl.trim() && !endpointLoopback}
+              <p class="mt-2 text-[11.5px] text-amber-550">{t("settings.externalRemoteWarn")}</p>
+            {/if}
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                class="btn-outline"
+                onclick={probeEndpoint}
+                disabled={endpointBusy || !endpointUrl.trim()}
+              >
+                {endpointBusy ? t("settings.externalDetecting") : t("settings.externalDetect")}
+              </button>
+              {#if endpointModels.length > 0}
+                <select
+                  class="min-w-0 flex-1 rounded-lg border border-paper-line bg-paper px-3 py-2 text-[13px] text-ink"
+                  bind:value={endpointPicked}
+                  aria-label={t("settings.externalPick")}
+                >
+                  {#each endpointModels as m (m.id)}
+                    <option value={m.id}>{m.id}</option>
+                  {/each}
+                </select>
+                <button
+                  type="button"
+                  class="btn-outline shrink-0"
+                  onclick={useEndpointModel}
+                  disabled={endpointBusy || !endpointPicked}
+                >
+                  {t("settings.externalUseModel")}
+                </button>
+              {/if}
+            </div>
+            {#if endpointNote}
+              <p class="mt-2 text-[12px] text-ink-soft">{endpointNote}</p>
+            {/if}
+          </div>
+        {/if}
+      </div>
 
       {#if machine && machine.suggestions.length > 0}
         <div class="mt-5">

@@ -113,7 +113,22 @@
     "measureAgain": "Measure speed again",
     "measuring": "Measuring…",
     "measureDone": "Speed measurement updated.",
-    "measureFailed": "Could not measure speed. Try again when Chat is idle."
+    "measureFailed": "Could not measure speed. Try again when Chat is idle.",
+    "externalEndpoint": "Model server on your network",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalUrl": "Server address",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalApiKey": "API key (optional)",
+    "externalDetect": "Detect models",
+    "externalDetecting": "Detecting models…",
+    "externalPick": "Model on the server",
+    "externalUseModel": "Use this model",
+    "externalInUse": "This model is now the active AI.",
+    "externalStopUsing": "Stop using it",
+    "externalSource": "External server",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server.",
+    "externalNoModels": "The server didn't report any models."
   },
   "onboarding": {
     "welcome": "Welcome to Larra",
@@ -544,7 +559,15 @@
     "engineLogMissing": "The engine log isn't on this computer yet.",
     "folderNotFound": "Folder not found.",
     "promptTooLong": "This question and the House rules are too long for this AI to read at once. Shorten them or choose an AI that can handle more text.",
-    "attachmentsFailed": "Some attached files could not be read. Retry those files before asking about them."
+    "attachmentsFailed": "Some attached files could not be read. Retry those files before asking about them.",
+    "endpointBaseUrlMissing": "Type the server address first.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long."
   },
   "pii": {
     "heading": "Personal information",

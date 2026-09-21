@@ -114,7 +114,22 @@
     "measureAgain": "Mesurer à nouveau la vitesse",
     "measuring": "Mesure en cours…",
     "measureDone": "Mesure de vitesse mise à jour.",
-    "measureFailed": "Impossible de mesurer la vitesse. Réessayez lorsque Chat est inactif."
+    "measureFailed": "Impossible de mesurer la vitesse. Réessayez lorsque Chat est inactif.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Bienvenue dans Larra",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Le journal n’est pas encore sur cet ordinateur.",
     "folderNotFound": "Dossier introuvable.",
     "promptTooLong": "La question et les House rules sont trop longues pour que cette IA les lise en une seule fois. Raccourcissez-les ou choisissez une IA capable de lire davantage de texte.",
-    "attachmentsFailed": "Certains fichiers joints n'ont pas pu être lus. Relancez leur traitement avant de poser une question à leur sujet."
+    "attachmentsFailed": "Certains fichiers joints n'ont pas pu être lus. Relancez leur traitement avant de poser une question à leur sujet.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Informations personnelles",

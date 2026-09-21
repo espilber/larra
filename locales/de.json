@@ -114,7 +114,22 @@
     "measureAgain": "Geschwindigkeit erneut messen",
     "measuring": "Messung läuft…",
     "measureDone": "Geschwindigkeitsmessung aktualisiert.",
-    "measureFailed": "Geschwindigkeit konnte nicht gemessen werden. Erneut versuchen, wenn Chat inaktiv ist."
+    "measureFailed": "Geschwindigkeit konnte nicht gemessen werden. Erneut versuchen, wenn Chat inaktiv ist.",
+    "externalDetect": "Detect models",
+    "externalSource": "External server",
+    "externalApiKey": "API key (optional)",
+    "externalRemoteNote": "answers arrive from another machine",
+    "externalPick": "Model on the server",
+    "externalUrl": "Server address",
+    "externalDetecting": "Detecting models…",
+    "externalEndpoint": "Model server on your network",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalInUse": "This model is now the active AI.",
+    "externalNoModels": "The server didn't report any models.",
+    "externalUseModel": "Use this model",
+    "externalStopUsing": "Stop using it",
+    "externalEndpointLede": "Point the chat at an OpenAI-compatible server on your network — a bigger machine can run models this one can't.",
+    "externalRemoteWarn": "Documents on the Shelf will be sent to this server."
   },
   "onboarding": {
     "welcome": "Willkommen bei Larra",
@@ -545,7 +560,15 @@
     "engineLogMissing": "Auf diesem Computer gibt es noch kein Protokoll.",
     "folderNotFound": "Ordner nicht gefunden.",
     "promptTooLong": "Die Frage und die House rules sind zu lang, um von dieser KI auf einmal gelesen zu werden. Kürze sie oder wähle eine KI, die mehr Text verarbeiten kann.",
-    "attachmentsFailed": "Einige Anhänge konnten nicht gelesen werden. Lass Larra diese Dateien erneut einlesen, bevor du Fragen dazu stellst."
+    "attachmentsFailed": "Einige Anhänge konnten nicht gelesen werden. Lass Larra diese Dateien erneut einlesen, bevor du Fragen dazu stellst.",
+    "endpointUserInfoNotAllowed": "Use the separate API key field, not user:password in the address.",
+    "endpointUrlTooLong": "That server address is too long.",
+    "endpointModelIdMissing": "Pick a model from the server first.",
+    "endpointSchemeUnsupported": "Only http and https addresses are supported.",
+    "endpointModelIdTooLong": "That model identifier is too long.",
+    "endpointApiKeyTooLong": "That API key is too long.",
+    "endpointUrlInvalid": "That doesn't look like a server address.",
+    "endpointBaseUrlMissing": "Type the server address first."
   },
   "pii": {
     "heading": "Persönliche Daten",

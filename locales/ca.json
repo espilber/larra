@@ -113,7 +113,22 @@
     "measureAgain": "Torna a mesurar la velocitat",
     "measuring": "Mesurant…",
     "measureDone": "Mesura de velocitat actualitzada.",
-    "measureFailed": "No s’ha pogut mesurar la velocitat. Torna-ho a provar quan Chat estigui inactiu."
+    "measureFailed": "No s’ha pogut mesurar la velocitat. Torna-ho a provar quan Chat estigui inactiu.",
+    "externalEndpoint": "Servidor de models a la teva xarxa",
+    "externalEndpointLede": "Apunta l'app a un servidor compatible amb OpenAI a la teva xarxa: URL, API key i un desplegable amb els models detectats.",
+    "externalUrl": "Adreça del servidor",
+    "externalUrlPlaceholder": "http://192.168.1.10:1234/v1",
+    "externalApiKey": "API key (opcional)",
+    "externalDetect": "Cercar models",
+    "externalDetecting": "Cercant models…",
+    "externalPick": "Model del servidor",
+    "externalUseModel": "Fer servir aquest model",
+    "externalInUse": "Aquest model és ara la IA activa.",
+    "externalStopUsing": "Deixar de fer-lo servir",
+    "externalSource": "Servidor extern",
+    "externalRemoteNote": "les respostes arriben d'una altra màquina",
+    "externalRemoteWarn": "Els documents de l'estanteria s'enviaran a aquest servidor.",
+    "externalNoModels": "El servidor no informa de cap model."
   },
   "onboarding": {
     "welcome": "Et donem la benvinguda a Larra",
@@ -544,7 +559,15 @@
     "engineLogMissing": "Encara no hi ha registre en aquest ordinador.",
     "folderNotFound": "No s'ha trobat la carpeta.",
     "promptTooLong": "Aquesta pregunta i les House rules són massa llargues perquè aquesta IA les llegeixi de cop. Escurça-les o tria una IA que admeti més text.",
-    "attachmentsFailed": "No s'han pogut llegir alguns fitxers adjunts. Torna'ls a processar abans de fer preguntes sobre aquests fitxers."
+    "attachmentsFailed": "No s'han pogut llegir alguns fitxers adjunts. Torna'ls a processar abans de fer preguntes sobre aquests fitxers.",
+    "endpointBaseUrlMissing": "Escriu primer l'adreça del servidor.",
+    "endpointUrlTooLong": "Aquesta adreça és massa llarga.",
+    "endpointUrlInvalid": "Això no sembla una adreça de servidor.",
+    "endpointSchemeUnsupported": "Només s'admeten adreces http i https.",
+    "endpointUserInfoNotAllowed": "Fes servir el camp de API key, no usuari:contrasenya a l'adreça.",
+    "endpointModelIdMissing": "Tria primer un model.",
+    "endpointModelIdTooLong": "Aquest identificador de model és massa llarg.",
+    "endpointApiKeyTooLong": "Aquesta API key és massa llarga."
   },
   "pii": {
     "heading": "Informació personal",
