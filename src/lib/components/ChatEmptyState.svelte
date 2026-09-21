@@ -4,7 +4,7 @@
   import { t } from "$lib/i18n.svelte";
   import { app, chatState, fillDraft } from "$lib/stores.svelte";
   import ConversationFace from "./ConversationFace.svelte";
-  import mark from "../../assets/R.webp";
+  import mark from "../../assets/larra-mark.png";
 
   let { avatarId = null }: { avatarId?: string | null } = $props();
 

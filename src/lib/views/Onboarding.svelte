@@ -15,7 +15,7 @@
   import { app, beginModelInstall, notifyInvokeError, refreshSettings } from "$lib/stores.svelte";
   import { t } from "$lib/i18n.svelte";
   import { shot } from "$lib/shot-control.svelte";
-  import mark from "../../assets/R.webp";
+  import mark from "../../assets/larra-mark.png";
 
   let step = $state<"promise" | "model">(
     shot.onboard === "model" || import.meta.env.VITE_START_ONBOARD === "model"
