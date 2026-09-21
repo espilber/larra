@@ -76,6 +76,61 @@ pub async fn external_endpoint_probe(
         .map_err(|error| format!("{error:#}"))
 }
 
+/// Make an external OpenAI-compatible endpoint the active AI. Chat then
+/// talks to that server instead of the bundled llama.cpp engine.
+#[tauri::command]
+pub async fn external_model_set(
+    ctx: State<'_, Arc<Ctx>>,
+    engine: State<'_, Arc<Engine>>,
+    base_url: String,
+    model_id: String,
+    api_key: Option<String>,
+    display_name: Option<String>,
+) -> CmdResult<()> {
+    let config = crate::settings::EndpointConfig::parse(&base_url, &model_id, api_key.as_deref())?;
+    let name = display_name
+        .map(|name| name.trim().to_string())
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| config.model_id.clone());
+    let name = crate::limits::clip_chars(&name, crate::limits::ENDPOINT_MODEL_NAME_MAX_CHARS);
+    ctx.update_settings(|settings| {
+        settings.active_model = Some(crate::settings::ActiveModel {
+            file: String::new(),
+            name,
+            source: "external".into(),
+            reference: config.base_url.clone(),
+            license: None,
+            size_bytes: 0,
+            endpoint: Some(config),
+        });
+        // A benchmark measured llama.cpp on this machine; it says nothing
+        // about a remote server, so drop it and let the conservative
+        // default budget apply.
+        settings.benchmark = None;
+        settings.context_budget_chars = None;
+    })
+    .map_err(|error| format!("{error:#}"))?;
+    // Drop whatever engine state the previous model had; the next chat
+    // starts fresh against the endpoint.
+    engine.stop().await;
+    Ok(())
+}
+
+/// Stop using the external endpoint. The active AI is unset; a local one
+/// can be picked again from Settings or Onboarding.
+#[tauri::command]
+pub async fn external_model_clear(
+    ctx: State<'_, Arc<Ctx>>,
+    engine: State<'_, Arc<Engine>>,
+) -> CmdResult<()> {
+    ctx.update_settings(|settings| {
+        settings.active_model = None;
+    })
+    .map_err(|error| format!("{error:#}"))?;
+    engine.stop().await;
+    Ok(())
+}
+
 /// Open the public Hugging Face or Ollama page for a catalog AI.
 #[tauri::command]
 pub fn open_model_page(app: AppHandle, source: String, reference: String) -> CmdResult<()> {

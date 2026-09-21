@@ -270,6 +270,8 @@ pub fn run() {
             commands::machine_profile,
             commands::models_search,
             commands::external_endpoint_probe,
+            commands::external_model_set,
+            commands::external_model_clear,
             commands::open_model_page,
             commands::model_install,
             commands::download_cancel,
