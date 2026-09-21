@@ -63,6 +63,9 @@ struct Inner {
     child: Option<Child>,
     port: u16,
     model_file: String,
+    /// Set while the active model is an external OpenAI-compatible endpoint;
+    /// then `child` is `None` and `port` is unused.
+    external_base_url: Option<String>,
     benchmark_runtime: Option<crate::settings::BenchmarkRuntime>,
     reasoning: Option<reasoning::ReasoningCaps>,
     chat_stall: Duration,
@@ -239,6 +242,7 @@ impl Engine {
                 child: None,
                 port: 0,
                 model_file: String::new(),
+                external_base_url: None,
                 benchmark_runtime: None,
                 reasoning: None,
                 chat_stall: Duration::from_secs(90),

@@ -15,7 +15,7 @@ use super::process::{
 };
 use super::tune::{ModelHint, SpawnPlan};
 use super::{Engine, EngineState, Inner, ENGINE_RELEASE};
-use crate::settings::ActiveModel;
+use crate::settings::{ActiveModel, EndpointConfig};
 
 const HEALTH_TIMEOUT: Duration = Duration::from_secs(240);
 const STOPPED: &str = "stopped";
@@ -146,6 +146,9 @@ impl Engine {
             self.set_status(EngineState::NoModel, None);
             return Err(anyhow!("no AI model installed yet"));
         };
+        if let Some(endpoint) = model.endpoint.clone() {
+            return self.ensure_endpoint_ready(&endpoint, cancel).await;
+        }
         let model_path = self.model_path(&model);
         if !model_path.exists() {
             self.set_status(
@@ -271,6 +274,121 @@ impl Engine {
                 }
             }
         }
+    }
+
+    /// `GET /models` on an external endpoint — the list call every
+    /// OpenAI-compatible server answers, used here as the health check.
+    async fn endpoint_health_ok(&self, base_url: &str) -> bool {
+        let url = format!("{base_url}/models");
+        matches!(
+            self.client
+                .get(&url)
+                .timeout(Duration::from_secs(2))
+                .send()
+                .await,
+            Ok(response) if response.status().is_success()
+        )
+    }
+
+    /// Bring up the external-endment mode: no llama-server child process,
+    /// no engine download — just confirm the endpoint answers, then hand
+    /// its base URL to the stream. Kills a leftover local child first, so
+    /// switching a GGUF AI off releases its memory.
+    async fn ensure_endpoint_ready(
+        self: &std::sync::Arc<Self>,
+        endpoint: &EndpointConfig,
+        cancel: &AtomicBool,
+    ) -> Result<String> {
+        {
+            let mut inner = tokio::select! {
+                _ = crate::engine::wait_if_cancelled(cancel) => return Err(stopped_error()),
+                guard = self.inner.lock() => guard,
+            };
+            let live = tokio::select! {
+                biased;
+                _ = crate::engine::wait_if_cancelled(cancel) => return Err(stopped_error()),
+                live = self.live_endpoint_url(&mut inner, &endpoint.base_url) => live,
+            };
+            if let Some(url) = live {
+                return Ok(url);
+            }
+        }
+
+        self.set_status(EngineState::Starting, None);
+        let started = std::time::Instant::now();
+        let mut last_note = started;
+        loop {
+            if cancel.load(Ordering::Relaxed) {
+                return Err(stopped_error());
+            }
+            if self.endpoint_health_ok(&endpoint.base_url).await {
+                let mut inner = self.inner.lock().await;
+                if let Some(mut child) = inner.child.take() {
+                    let _ = child.kill().await;
+                }
+                inner.external_base_url = Some(endpoint.base_url.clone());
+                inner.model_file = String::new();
+                inner.flatten_tools = false;
+                inner.tools_rejected = false;
+                inner.benchmark_runtime = None;
+                inner.chat_stall = super::stream::CHAT_STALL_TIMEOUT;
+                *crate::core::write_lock(&self.ctx.runtime_plan) = None;
+                let url = endpoint.base_url.clone();
+                inner.reasoning = Some(self.load_reasoning_caps(&url).await);
+                self.set_status(EngineState::Ready, None);
+                log::info!("external endpoint ready: {url}");
+                return Ok(url);
+            }
+            if started.elapsed() > HEALTH_TIMEOUT {
+                self.set_status(
+                    EngineState::Error,
+                    Some(format!(
+                        "The model server at {} didn't answer. Is it running?",
+                        endpoint.base_url
+                    )),
+                );
+                return Err(anyhow!(
+                    "external endpoint not reachable at {}",
+                    endpoint.base_url
+                ));
+            }
+            if last_note.elapsed() >= Duration::from_secs(10) {
+                let secs = started.elapsed().as_secs();
+                log::info!("still waiting for the model server ({}s)", secs);
+                last_note = std::time::Instant::now();
+            }
+            tokio::select! {
+                _ = super::wait_if_cancelled(cancel) => {},
+                _ = tokio::time::sleep(Duration::from_millis(400)) => {},
+            }
+        }
+    }
+
+    /// External variant of [`Self::live_url`]: a live endpoint is one whose
+    /// base URL matches the active model and answers `/models`.
+    async fn live_endpoint_url(&self, inner: &mut Inner, base_url: &str) -> Option<String> {
+        let same = inner.external_base_url.as_deref() == Some(base_url);
+        if same && self.endpoint_health_ok(base_url).await {
+            if inner.reasoning.is_none() {
+                inner.reasoning = Some(self.load_reasoning_caps(base_url).await);
+            }
+            self.set_status(EngineState::Ready, None);
+            Some(base_url.to_string())
+        } else {
+            self.clear_engine_state(inner).await;
+            None
+        }
+    }
+
+    /// Drop whatever engine state a previous model had (spawned llama-server
+    /// or an external endpoint) when the active model changed.
+    async fn clear_engine_state(&self, inner: &mut Inner) {
+        if let Some(mut child) = inner.child.take() {
+            let _ = child.kill().await;
+        }
+        inner.external_base_url = None;
+        inner.reasoning = None;
+        *crate::core::write_lock(&self.ctx.runtime_plan) = None;
     }
 
     async fn spawn_and_wait(
@@ -441,6 +559,7 @@ impl Engine {
         inner.child = Some(child);
         inner.port = port;
         inner.model_file = model.file.clone();
+        inner.external_base_url = None;
         let runtime = super::bench::runtime(pin, &plan);
         let invalidated = super::bench::invalidate(
             &mut crate::core::write_lock(&self.ctx.settings),
@@ -477,11 +596,7 @@ impl Engine {
             self.set_status(EngineState::Ready, None);
             Some(format!("http://127.0.0.1:{port}"))
         } else {
-            if let Some(mut child) = inner.child.take() {
-                let _ = child.kill().await;
-            }
-            inner.reasoning = None;
-            *crate::core::write_lock(&self.ctx.runtime_plan) = None;
+            self.clear_engine_state(inner).await;
             None
         }
     }
@@ -492,6 +607,7 @@ impl Engine {
         if let Some(mut child) = inner.child.take() {
             let _ = child.kill().await;
         }
+        inner.external_base_url = None;
         inner.reasoning = None;
         *crate::core::write_lock(&self.ctx.runtime_plan) = None;
         drop(inner);
@@ -520,6 +636,7 @@ impl Engine {
                 }
             }
             inner.child = None;
+            inner.external_base_url = None;
             inner.reasoning = None;
             *crate::core::write_lock(&self.ctx.runtime_plan) = None;
         }
@@ -530,7 +647,87 @@ impl Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::NoopEvents;
+    use crate::ingest::extract::ExtractorSettings;
+    use crate::paths::Paths;
     use std::path::Path;
+    use std::sync::Arc;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    /// Answer `/models` with 200 and everything else with 404, for a bounded
+    /// number of connections. The external lifecycle polls /models and reads
+    /// /props (llama.cpp-only) after it turns Ready.
+    async fn serve_endpoint_models() -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        tokio::spawn(async move {
+            for _ in 0..64 {
+                let Ok((mut socket, _)) = listener.accept().await else {
+                    break;
+                };
+                let mut buffer = vec![0u8; 4096];
+                let read = socket.read(&mut buffer).await.unwrap_or(0);
+                let request = String::from_utf8_lossy(&buffer[..read]).to_string();
+                let response = if request.starts_with("GET /models") {
+                    let body = "{\"data\":[{\"id\":\"remote-model\"}]}";
+                    format!(
+                        "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+                        body.len(),
+                        body
+                    )
+                } else {
+                    "HTTP/1.1 404 Not Found\r\ncontent-length: 0\r\nconnection: close\r\n\r\n"
+                        .to_string()
+                };
+                let _ = socket.write_all(response.as_bytes()).await;
+            }
+        });
+        format!("http://127.0.0.1:{port}")
+    }
+
+    #[tokio::test]
+    async fn external_endpoint_becomes_ready_and_reports_its_base_url() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = Paths::new(dir.path().join("appdata"));
+        let ctx = crate::core::Ctx::new(paths, Arc::new(NoopEvents), ExtractorSettings::default())
+            .unwrap();
+        let engine = Engine::new(ctx.clone());
+
+        let base_url = serve_endpoint_models().await;
+        {
+            let mut settings = crate::core::write_lock(&ctx.settings);
+            settings.active_model = Some(ActiveModel {
+                file: String::new(),
+                name: "Remote Gemma".into(),
+                source: "external".into(),
+                reference: "LM Studio".into(),
+                license: None,
+                size_bytes: 0,
+                endpoint: Some(EndpointConfig {
+                    base_url: base_url.clone(),
+                    model_id: "gemma-4-12b".into(),
+                    api_key: None,
+                }),
+            });
+        }
+
+        let url = engine
+            .ensure_ready_cancel(&AtomicBool::new(false))
+            .await
+            .expect("external ready");
+        assert_eq!(url, base_url);
+        let status = engine.status();
+        assert_eq!(status.state, EngineState::Ready);
+        assert_eq!(status.model_name.as_deref(), Some("Remote Gemma"));
+
+        // The stream asks for the cached URL without re-running the cycle.
+        assert_eq!(engine.cached_base_url().as_deref(), Some(base_url.as_str()));
+
+        engine.stop().await;
+        assert_eq!(engine.status().state, EngineState::Stopped);
+        assert_eq!(engine.cached_base_url(), None);
+    }
 
     fn plan(no_mmap: bool, flash: &'static str) -> SpawnPlan {
         SpawnPlan {

@@ -37,8 +37,11 @@ impl Drop for GenerationSlot<'_> {
 }
 
 impl Engine {
-    fn cached_base_url(&self) -> Option<String> {
+    pub(crate) fn cached_base_url(&self) -> Option<String> {
         let inner = self.inner.try_lock().ok()?;
+        if let Some(url) = &inner.external_base_url {
+            return Some(url.clone());
+        }
         (inner.child.is_some() && inner.port != 0)
             .then(|| format!("http://127.0.0.1:{}", inner.port))
     }
