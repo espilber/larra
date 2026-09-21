@@ -113,6 +113,11 @@ impl Engine {
                     return Ok(ChatOutput::default());
                 }
                 body["messages"] = json!(messages.as_ref());
+                // External endpoint variant: LM Studio and friends require
+                // `model`, and `cache_prompt` is a llama.cpp extension strict
+                // servers reject. The local engine never needs `model`.
+                let endpoint = self.active_model().and_then(|model| model.endpoint.clone());
+                apply_endpoint_body_fields(&mut body, endpoint.as_ref(), options.cache_prompt);
                 let caps = {
                     let inner = tokio::select! {
                         biased;
@@ -257,6 +262,31 @@ inlining tool turns and trying again: {text}"
 }
 
 /// Give up when llama-server sends no bytes for this long (prefill or a hung follow-up).
+/// Align the completion body with the engine mode. An external endpoint
+/// gets its `model` id and loses `cache_prompt` (a llama.cpp extension that
+/// strict OpenAI servers reject). The local engine never sends `model`
+/// (llama-server serves its own file) and keeps the caller's `cache_prompt`.
+pub(crate) fn apply_endpoint_body_fields(
+    body: &mut serde_json::Value,
+    endpoint: Option<&crate::settings::EndpointConfig>,
+    cache_prompt: bool,
+) {
+    match endpoint {
+        Some(config) => {
+            body["model"] = json!(config.model_id);
+            if let Some(obj) = body.as_object_mut() {
+                obj.remove("cache_prompt");
+            }
+        }
+        None => {
+            if let Some(obj) = body.as_object_mut() {
+                obj.remove("model");
+            }
+            body["cache_prompt"] = json!(cache_prompt);
+        }
+    }
+}
+
 pub(crate) const CHAT_STALL_TIMEOUT: Duration = Duration::from_secs(90);
 
 /// Read an OpenAI-style SSE chat stream until `[DONE]`, cancel, or error.
@@ -462,9 +492,39 @@ impl ToolCallAcc {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::settings::EndpointConfig;
     use bytes::Bytes;
     use futures_util::stream;
     use std::sync::Mutex;
+
+    #[test]
+    fn external_body_carries_the_model_and_drops_cache_prompt() {
+        let mut body = json!({
+            "messages": [],
+            "cache_prompt": true,
+            "max_tokens": 512,
+        });
+        let config =
+            EndpointConfig::parse("http://127.0.0.1:1234/v1", "gemma-4-12b", None).unwrap();
+        apply_endpoint_body_fields(&mut body, Some(&config), true);
+        assert_eq!(body["model"], "gemma-4-12b");
+        assert!(body.get("cache_prompt").is_none());
+        assert_eq!(body["max_tokens"], 512);
+    }
+
+    #[test]
+    fn local_body_keeps_cache_prompt_and_no_model() {
+        let mut body = json!({
+            "messages": [],
+            "model": "stale",
+            "cache_prompt": false,
+            "max_tokens": 512,
+        });
+        apply_endpoint_body_fields(&mut body, None, true);
+        assert!(body.get("model").is_none());
+        assert_eq!(body["cache_prompt"], true);
+        assert_eq!(body["max_tokens"], 512);
+    }
 
     fn delta(text: &str) -> Bytes {
         Bytes::from(format!(
