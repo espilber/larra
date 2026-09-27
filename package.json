@@ -57,7 +57,7 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "jsdom": "^30.0.1",
     "oxlint": "^1.82.0",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.8",
     "prettier-plugin-svelte": "^4.1.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "svelte": "^5.57.0",
